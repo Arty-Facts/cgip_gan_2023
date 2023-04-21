@@ -4,3 +4,4 @@ tmp
 .vscode
 __pycache__
 data
+saved_examples
