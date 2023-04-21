@@ -9,8 +9,14 @@ In linux
 ./docker.sh [clean]
 ```
 
-## Setup and enter the virtual environment 
+## Setup up system
+```
+chmod +x environment/base-packages.sh
+sudo ./environment/base-packages.sh
+```
 
+
+## Setup and enter the virtual environment 
 In windows
 
 ```
