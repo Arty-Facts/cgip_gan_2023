@@ -27,7 +27,7 @@ class StyleGan_Discriminator(nn.Module):
         self.layers = [*self.in_blocks, *self.feature_blocks, self.final_block]
 
     def forward(self, x):
-        x = self.in_blocks[-1](x)
+        x = self.in_blocks[0](x)
         for block in self.feature_blocks:
             x = block(x)
         return self.final_block(x)
@@ -40,6 +40,7 @@ class StyleGan_Discriminator(nn.Module):
         for layer in self.layers:
             if layer.id() in state_dict:
                 layer.load_state_dict(state_dict[layer.id()])
+                logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... was found in state_dict')
             else:
-                logging.warning(f'Warning: {layer.id()[:80]}... not found in state_dict')
+                logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... not found in state_dict')
         return self

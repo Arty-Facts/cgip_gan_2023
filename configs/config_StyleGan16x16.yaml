@@ -2,7 +2,7 @@ supervisor:
   module: supervisors.supervisor
   name: Supervisor
   args:
-    name: StyleGan8x8
+    name: StyleGan16x16
     version: 1
     seed: 1337
     device: cuda
@@ -18,7 +18,7 @@ data:
         split: train
         download: true
     transforms:
-        - [torchvision.transforms, Resize, {size: [8, 8]}]
+        - [torchvision.transforms, Resize, {size: [16, 16]}]
         - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, RandomHorizontalFlip, {p: 0.5}]
         - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
@@ -26,7 +26,7 @@ data:
       module: torch.utils.data
       name: DataLoader
       args:
-        batch_size: 256
+        batch_size: 128
         num_workers: 0
         shuffle: true
         drop_last: true
@@ -38,13 +38,13 @@ models:
         z_dim: 512
         w_dim: 512
         out_channels: 3
-        latent_channels: [512, 256]
+        latent_channels: [512, 256, 128]
   netD:
     module: models.discriminator
     name: StyleGan_Discriminator
     args: 
       in_channels: 3
-      latent_channels: [256, 512]
+      latent_channels: [128, 256, 512]
 score: 
   - [1.0, hooks.metrics, ---, {}]
 loss:
@@ -86,5 +86,5 @@ hooks:
   - [hooks.gan_hooks, TensorboardScalarData, {every: 1, targets: [loss_disc,  loss_gen]}]
   - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
   - [hooks.save, Save, {every: 1, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
-  - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: checkpoints/StyleGan4x4/1/latest}]
+  - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: checkpoints/StyleGan8x8/1/latest}]
   - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]

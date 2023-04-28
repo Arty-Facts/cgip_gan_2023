@@ -8,11 +8,11 @@ LOAD = {
     ".pkl": torch.load,
 } 
 
-class Resume:
+class Load:
     def __init__(self, supervisor, targets, dir):
         self.targets = targets 
         self.supervisor = supervisor
-        self.path = supervisor.base_path / dir
+        self.path = Path(dir)
         self.start_done = False
 
     def ping(self):
@@ -44,6 +44,6 @@ class Resume:
             path = self.path / target
             if path.exists():
                 self.supervisor[name].load_state_dict(LOAD[path.suffix](path, map_location=self.supervisor.target_device))
-                print(f"Loading {name} from {path}")
+                print(f"Resuming {name} from {path}")
             else:
                 print(f"Did not find {path} starting {name} from scratch")

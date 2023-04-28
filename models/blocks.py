@@ -16,7 +16,7 @@ class ID_Layer(nn.Module):
         self.pretrained = False
         
     def id(self):
-        return super().__str__().replace('\n', '')
+        return super().__str__().replace('\n', '').replace(' ', '')
     
     def forward(self, *args, **kwargs):
         return self.module( *args, **kwargs)
