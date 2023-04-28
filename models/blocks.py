@@ -2,13 +2,25 @@
 import torch
 from torch import nn
 
-class ID_Layer(nn.Sequential):
-    def __init__(self, *args):
-        super().__init__(*args)
+
+class Parameter(nn.Module):
+    def __init__(self, parameter):
+        super().__init__()
+        self.parameter = nn.Parameter(parameter)
+    def forward(self, *args):
+        return self.parameter
+class ID_Layer(nn.Module):
+    def __init__(self, module):
+        super().__init__()
+        self.module = module
         self.pretrained = False
         
     def id(self):
         return super().__str__().replace('\n', '')
+    
+    def forward(self, *args, **kwargs):
+        return self.module( *args, **kwargs)
+    
 
 class WSLinear(nn.Module):
     def __init__(
@@ -110,8 +122,8 @@ class StyleGanInitBlock(nn.Module):
         self.inject_noise2 = InjectNoise(out_channel)
         self.adain1 = AdaIN(out_channel, w_dim)
         self.adain2 = AdaIN(out_channel, w_dim)
-        self.pretraied = False
-    def forward(self, x,w):
+
+    def forward(self, x, w):
         x = self.adain1(self.leaky(self.inject_noise1(x)), w)
         x = self.adain2(self.leaky(self.inject_noise2(self.conv1(x))), w)
         return x
@@ -127,7 +139,7 @@ class StyleGanBlock(nn.Module):
         self.inject_noise2 = InjectNoise(out_channel)
         self.adain1 = AdaIN(out_channel, w_dim)
         self.adain2 = AdaIN(out_channel, w_dim)
-        self.pretraied = False
+
     def forward(self, x, w):
         x = self.adain1(self.leaky(self.inject_noise1(self.conv1(x))), w)
         x = self.adain2(self.leaky(self.inject_noise2(self.conv2(x))), w)
