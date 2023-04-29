@@ -12,11 +12,9 @@ class StyleGan_Generator(nn.Module):
              z_dim,      w_dim,      out_channels,      latent_channels,      leakyInReLU,      start_size,      scale_factor )
         assert len(latent_channels) >= 1, 'latent_channels must have at least 1 elements'
         
-        h, w = start_size
-        self.starting_cte = ID_Layer(Parameter(torch.ones(1, latent_channels[0], h, w)))
         self.map = ID_Layer(MappingNetwork(z_dim, w_dim))
 
-        self.init_block = ID_Layer(StyleGanInitBlock(latent_channels[0], latent_channels[0], w_dim, leakyInReLU))
+        self.init_block = ID_Layer(StyleGanInitBlock(latent_channels[0], latent_channels[0], w_dim, start_size, leakyInReLU))
         
         self.feature_blocks, self.out_layers = (
             nn.ModuleList([]),
@@ -27,13 +25,11 @@ class StyleGan_Generator(nn.Module):
         for in_c, out_c in zip(latent_channels[:-1], latent_channels[1:]):
             self.feature_blocks.append(ID_Layer(StyleGanBlock(in_c, out_c, w_dim)))
             self.out_layers.append(ID_Layer(WSConv2d(out_c, out_channels, kernel_size = 1, stride=1, padding=0)))
-        self.layers = [self.map, self.starting_cte, self.init_block, *self.feature_blocks, *self.out_layers]
+        self.layers = [self.map, self.init_block, *self.feature_blocks, *self.out_layers]
         
     def forward(self, noise):
         w = self.map(noise)
-        x = self.starting_cte(None)
-
-        x = self.init_block(x, w)
+        x = self.init_block(w)
 
         for feature_block in self.feature_blocks:
             x = self.upsample(x)

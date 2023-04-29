@@ -1,7 +1,7 @@
 import importlib
 import torchvision
 from typing import Any, Union
-from utils.utils import save_to_yaml
+from utils.utils import save_to_yaml, load_from_yaml
 from hooks.hook_handler import HookHandler
 
 
@@ -19,6 +19,12 @@ def load_module(module, func, *args, **kvargs):
     mod = importlib.import_module(module)
     func = getattr(mod, func)
     return func(*args, **kvargs)
+
+def load_model(target, path):
+    config = load_from_yaml(path)
+    models = {}
+    setup_models(models, config["models"])
+    return models[target]
 
 def setup_module(par, **kvargs) -> Any:
     if isinstance(par, dict):
@@ -51,7 +57,7 @@ def setup_data(supervisor, par) -> None:
 
 def setup_models(supervisor, par) -> None:
     for name, conf in par.items():
-        model = setup_module(conf).to(supervisor.target_device)
+        model = setup_module(conf)#.to(supervisor.target_device)
         supervisor[name] = model
 
 def setup_optimizer(supervisor, par):

@@ -6,3 +6,4 @@ tqdm
 scipy
 ipympl
 tensorboard
+torch-summary

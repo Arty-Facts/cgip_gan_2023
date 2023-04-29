@@ -40,7 +40,6 @@ class StyleGan_Discriminator(nn.Module):
         for layer in self.layers:
             if layer.id() in state_dict:
                 layer.load_state_dict(state_dict[layer.id()])
-                logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... was found in state_dict')
             else:
                 logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... not found in state_dict')
         return self
