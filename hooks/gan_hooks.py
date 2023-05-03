@@ -42,7 +42,7 @@ class TensorboardGenerateImageSample:
                 fake = [scale(s[self.target_model](fixed_noise).detach().cpu()) for fixed_noise in self.fixed_noises]
                 for i, img in enumerate(fake):
                     torchvision.utils.save_image(img, curr_path / f"{i}.png")
-                img_grid_fake = torchvision.utils.make_grid(torch.cat(fake))
+                img_grid_fake = torchvision.utils.make_grid(torch.cat(fake), normalize=True)
                 self.writer.add_image(self.target_model, img_grid_fake, global_step=s.meta[self.global_steps])
 
 

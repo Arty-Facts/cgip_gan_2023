@@ -2,7 +2,7 @@ supervisor:
   module: supervisors.supervisor
   name: Supervisor
   args:
-    name: StyleGan16x16
+    name: StyleGan32x32
     version: 0
     seed: 1337
     device: cuda
@@ -19,7 +19,7 @@ data:
         download: true
     transforms:
         - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [16, 16]}]
+        - [torchvision.transforms, Resize, {size: [32, 32]}]
         - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, RandomHorizontalFlip, {p: 0.5}]
         - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
@@ -41,7 +41,7 @@ data:
         download: true
     transforms:
         - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [16, 16]}]
+        - [torchvision.transforms, Resize, {size: [32, 32]}]
         - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
     dataloader:
@@ -62,7 +62,7 @@ data:
         download: true
     transforms:
         - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [16, 16]}]
+        - [torchvision.transforms, Resize, {size: [32, 32]}]
         - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
     dataloader:
@@ -81,13 +81,13 @@ models:
         z_dim: 512
         w_dim: 512
         out_channels: 3
-        latent_channels: [512, 256, 128]
+        latent_channels: [512, 256, 128, 64]
   netD:
     module: models.discriminator
     name: discriminator_maxpool
     args: 
       in_channels: 3
-      latent_channels: [128, 256, 512]
+      latent_channels: [64, 128, 256, 512]
 score: 
   - [1.0, metrics.gan_metrics, ---, {samples: 100}]
 loss:
@@ -125,8 +125,8 @@ trainer:
     discriminator_loss: lossD
 
 hooks:
-  # - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/StyleGan8x8/2/latest}]
-  - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/StyleGan16x16/2/latest}]
+  # - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.save, Save, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
   - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
