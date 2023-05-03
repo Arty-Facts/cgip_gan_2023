@@ -26,6 +26,12 @@ def load_model(target, path):
     setup_models(models, config["models"])
     return models[target]
 
+def load_data(target, path):
+    config = load_from_yaml(path)
+    data = {}
+    setup_data(data, config["data"])
+    return data[target]
+
 def setup_module(par, **kvargs) -> Any:
     if isinstance(par, dict):
         module, name, args = par["module"], par["name"], par["args"]

@@ -3,11 +3,11 @@ supervisor:
   name: Supervisor
   args:
     name: StyleGan4x4
-    version: 1
+    version: 0
     seed: 1337
     device: cuda
     nodes: [0]
-    checkpoint: 'checkpoints'
+    checkpoint: 'd:checkpoints'
 data:
   train:
     dataset:
@@ -18,9 +18,52 @@ data:
         split: train
         download: true
     transforms:
+        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
         - [torchvision.transforms, Resize, {size: [4, 4]}]
         - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, RandomHorizontalFlip, {p: 0.5}]
+        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
+    dataloader:
+      module: torch.utils.data
+      name: DataLoader
+      args:
+        batch_size: 256
+        num_workers: 0
+        shuffle: true
+        drop_last: true
+  val:
+    dataset:
+      module: torchvision.datasets
+      name: Flowers102
+      args:
+        root: data
+        split: val
+        download: true
+    transforms:
+        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
+        - [torchvision.transforms, Resize, {size: [4, 4]}]
+        - [torchvision.transforms, ToTensor, {}]
+        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
+    dataloader:
+      module: torch.utils.data
+      name: DataLoader
+      args:
+        batch_size: 256
+        num_workers: 0
+        shuffle: true
+        drop_last: true
+  test:
+    dataset:
+      module: torchvision.datasets
+      name: Flowers102
+      args:
+        root: data
+        split: test
+        download: true
+    transforms:
+        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
+        - [torchvision.transforms, Resize, {size: [4, 4]}]
+        - [torchvision.transforms, ToTensor, {}]
         - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
     dataloader:
       module: torch.utils.data
@@ -41,12 +84,12 @@ models:
         latent_channels: [512]
   netD:
     module: models.discriminator
-    name: StyleGan_Discriminator
+    name: discriminator_maxpool
     args: 
       in_channels: 3
       latent_channels: [512]
 score: 
-  - [1.0, hooks.metrics, ---, {}]
+  - [1.0, metrics.gan_metrics, ---, {samples: 100}]
 loss:
   lossG:
     - [1.0, losses.generator_loss, MeanDiscriminatorLoss, {}]
@@ -82,11 +125,14 @@ trainer:
     discriminator_loss: lossD
 
 hooks:
-  - [hooks.gan_hooks, TensorboardGenerateImageSample, {target_model: netG, samples: 32, every: 1}]
-  - [hooks.gan_hooks, TensorboardScalarData, {every: 1, targets: [loss_disc,  loss_gen]}]
-  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
-  - [hooks.save, Save, {every: 1, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.save, Save, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
+  - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
+  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
+  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
+  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+
 
 
 

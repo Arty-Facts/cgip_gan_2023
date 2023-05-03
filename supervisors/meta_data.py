@@ -7,6 +7,7 @@ class MetaData:
         self.data = {
             "steps": 0,
             "epochs": 0,
+            "images": 0,
             "start_time": now.strftime("%Y/%m/%d %H:%M:%S"),
             "git-hash" : run_cmd("git rev-parse HEAD").strip() 
         }
@@ -26,7 +27,7 @@ class MetaData:
     def append(self, name, value):
         if name not in self.data:
             self.data[name] = []
-        self.data[name].append((self.data["epoch"], value))
+        self.data[name].append((self.data["images"], value))
 
     def get_last(self, name):
         if name not in self.data:

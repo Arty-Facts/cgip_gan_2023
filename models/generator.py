@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 from collections import deque
-from models.blocks import MappingNetwork, WSConv2d, StyleGanBlock, StyleGanInitBlock, ID_Layer, Parameter
+from models.blocks import MappingNetwork, WSConv2d, StyleGanBlock, StyleGanInitBlock, ID_Layer
 import logging
 
 class StyleGan_Generator(nn.Module):
@@ -46,7 +46,6 @@ class StyleGan_Generator(nn.Module):
         for layer in self.layers:
             if layer.id() in state_dict:
                 layer.load_state_dict(state_dict[layer.id()])
-                logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... was found in state_dict')
             else:
                 logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... not found in state_dict')
         
