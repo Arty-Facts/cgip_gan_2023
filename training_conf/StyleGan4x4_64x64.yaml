@@ -1,0 +1,36 @@
+stage4x4:
+  - supervisor:
+      args:
+        version: 1
+        name: IncrementalStyleGan
+        checkpoint: 'd:checkpoints'
+  - hooks
+      - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+      - [hooks.save, Save, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+      - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
+      - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
+      - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
+      - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
+      - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+stage8x8:
+  - supervisor:
+      args:
+        version: 2
+        name: IncrementalStyleGan
+        checkpoint: 'd:checkpoints'
+  - data:
+      train:
+        transforms:
+          - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
+          - [torchvision.transforms, Resize, {size: [8, 8]}]
+          - [torchvision.transforms, ToTensor, {}]
+          - [torchvision.transforms, RandomHorizontalFlip, {p: 0.5}]
+          - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
+  - models:
+      netG:
+        args: 
+          latent_channels: [512, 256]
+      netD:
+        args: 
+          latent_channels: [256, 512]
+

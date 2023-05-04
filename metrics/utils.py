@@ -24,11 +24,44 @@ def get_activations(images, model, device='cpu'):
         image = image.to(device)
 
         with torch.no_grad():
-            pred = max_pool(model.embed(image))
+            pred = avg_pool(model.embed(image))
         pred = pred.view(-1).cpu().numpy()
         pred_arr.append(pred)
 
     return np.array(pred_arr)
+
+
+
+def get_inception_activations(images, model, device='cpu'):
+    """Calculates the activations of the pool_3 layer for all images.
+    Params:
+    -- images      : List of image
+    -- model       : Instance of inception model
+    -- dims        : Dimensionality of features returned by Inception
+    -- device      : Device to run calculations
+    Returns:
+    -- A numpy array of dimension (num images, dims) that contains the
+       activations of the given tensor when feeding inception with the
+       query tensor.
+    """
+    model.eval()
+    pred_arr = []
+
+    avg_pool = torch.nn.AdaptiveAvgPool2d((1, 1))
+    for image in images:
+        image = image.to(device)
+
+        with torch.no_grad():
+            pred = model(image)[0]
+
+        if pred.size(2) != 1 or pred.size(3) != 1:
+            pred = avg_pool(pred)
+        pred = pred.view(-1).cpu().numpy()
+        pred_arr.append(pred)
+
+    return np.array(pred_arr)
+
+
 # nb.types.List(nb.types.Array(nb.types.float32, 2, 'C'))
 @nb.jit(nopython=False, cache=True)
 def frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
@@ -81,11 +114,31 @@ def frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return (diff.dot(diff) + np.trace(sigma1)
             + np.trace(sigma2) - 2 * tr_covmean)
 
-
+def inception_activation_statistics(images, model, device='cpu'):
+    """Calculation of the statistics used by the FID.
+    Params:
+    -- images      : List of image 
+    -- model       : Instance of inception model
+    -- batch_size  : The images numpy array is split into batches with
+                     batch size batch_size. A reasonable batch size
+                     depends on the hardware.
+    -- dims        : Dimensionality of features returned by Inception
+    -- device      : Device to run calculations
+    -- num_workers : Number of parallel dataloader workers
+    Returns:
+    -- mu    : The mean over samples of the activations of the pool_3 layer of
+               the inception model.
+    -- sigma : The covariance matrix of the activations of the pool_3 layer of
+               the inception model.
+    """
+    act = get_inception_activations(images, model, device)
+    mu = np.mean(act, axis=0)
+    sigma = np.cov(act, rowvar=False)
+    return mu, sigma
 
 
 def activation_statistics(images, model, device='cpu',):
-    """Calculation of the statistics used by the FID.
+    """Calculation of the statistics.
     Params:
     -- images      : List of image 
     -- model       : Instance of inception model
@@ -194,3 +247,4 @@ def mean_var_cosine_similarity(imgs1, imgs2):
         return torch_mean_var_cosine_similarity(imgs1, imgs2)
     else:
         raise TypeError(f'imgs1 and imgs2 must be both numpy.ndarray or torch.Tensor but got {type(imgs1[0])} and {type(imgs2[0])}')
+    

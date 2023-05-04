@@ -31,48 +31,6 @@ data:
         num_workers: 0
         shuffle: true
         drop_last: true
-  val:
-    dataset:
-      module: torchvision.datasets
-      name: Flowers102
-      args:
-        root: data
-        split: val
-        download: true
-    transforms:
-        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [32, 32]}]
-        - [torchvision.transforms, ToTensor, {}]
-        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
-    dataloader:
-      module: torch.utils.data
-      name: DataLoader
-      args:
-        batch_size: 128
-        num_workers: 0
-        shuffle: true
-        drop_last: true
-  test:
-    dataset:
-      module: torchvision.datasets
-      name: Flowers102
-      args:
-        root: data
-        split: test
-        download: true
-    transforms:
-        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [32, 32]}]
-        - [torchvision.transforms, ToTensor, {}]
-        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
-    dataloader:
-      module: torch.utils.data
-      name: DataLoader
-      args:
-        batch_size: 128
-        num_workers: 0
-        shuffle: true
-        drop_last: true
 models:
   netG:
       module: models.generator
