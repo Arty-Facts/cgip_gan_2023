@@ -89,7 +89,7 @@ class SaveBest:
             score = self.supervisor["score"](self.supervisor.meta)
             if self.best_score is None:
                 self.best_score = score
-            if score >= self.best_score:
+            if score <= self.best_score:
                 for name, target in self.targets.items():
                     path = self.path / target
                     item = self.supervisor[name]

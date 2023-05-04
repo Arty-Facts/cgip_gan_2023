@@ -32,6 +32,7 @@ class StyleGanTrainer:
         self.optimizer_discriminator = optimizer_discriminator 
         self.supervisor.meta["epochs"] = 0
         self.supervisor.meta["end_epochs"] = epochs
+        self.supervisor.meta["best_score"] = float("inf")
         self.generator_loss = generator_loss
         self.discriminator_loss = discriminator_loss
 
@@ -78,9 +79,12 @@ class StyleGanTrainer:
                 self.supervisor.meta["steps"] += 1
                 self.supervisor.meta["images"] += c.cur_batch_size
                 hooks.call("batch_end")
+            self.supervisor.meta["best_score"] = min(self.supervisor.meta["best_score"], self.supervisor["score"](self.supervisor.meta)[1])
             self.supervisor.meta["epochs"] = epoch
             hooks.call("epoch_end")
             hooks.call("ping")
         hooks.call("end")
+
+        return self.supervisor.meta["best_score"]
         
         
