@@ -84,7 +84,7 @@ models:
         latent_channels: [512]
   netD:
     module: models.discriminator
-    name: discriminator_maxpool
+    name: discriminator_avgpool
     args: 
       in_channels: 3
       latent_channels: [512]
