@@ -30,7 +30,7 @@ class StyleGanTrainer:
         self.discriminator = discriminator 
         self.optimizer_generator = optimizer_generator 
         self.optimizer_discriminator = optimizer_discriminator 
-        self.supervisor.meta["current_epochs"] = 0
+        self.supervisor.meta["epochs"] = 0
         self.supervisor.meta["end_epochs"] = epochs
         self.generator_loss = generator_loss
         self.discriminator_loss = discriminator_loss
@@ -43,8 +43,7 @@ class StyleGanTrainer:
         set_seed(self.supervisor.meta["seed"])
         
         hooks.call("start")
-        for epoch in range(self.supervisor.meta["current_epochs"], self.supervisor.meta["end_epochs"]):
-            self.supervisor.meta["current_epochs"] = epoch
+        for epoch in range(self.supervisor.meta["epochs"], self.supervisor.meta["end_epochs"]):
             hooks.call("epoch_begin")
             netD = self.supervisor[self.discriminator].to(device)
             netG = self.supervisor[self.generator].to(device)
@@ -79,8 +78,7 @@ class StyleGanTrainer:
                 self.supervisor.meta["steps"] += 1
                 self.supervisor.meta["images"] += c.cur_batch_size
                 hooks.call("batch_end")
-            self.supervisor.meta["epochs"] += 1
-
+            self.supervisor.meta["epochs"] = epoch
             hooks.call("epoch_end")
             hooks.call("ping")
         hooks.call("end")

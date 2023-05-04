@@ -2,6 +2,7 @@ import numpy as np
 import scipy 
 import torch
 import numba as nb
+from metrics.inception import InceptionV3
 
 
 def get_activations(images, model, device='cpu'):
@@ -248,3 +249,22 @@ def mean_var_cosine_similarity(imgs1, imgs2):
     else:
         raise TypeError(f'imgs1 and imgs2 must be both numpy.ndarray or torch.Tensor but got {type(imgs1[0])} and {type(imgs2[0])}')
     
+
+def frechet_inception_distance(dataset1, dataset2, dims=2048, device='cpu'):
+    """Computes the Frechet Inception Distance (FID) to evalulate the quality of
+    generated images. The FID metric calculates the distance between two
+    distributions of images."""
+
+    block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
+    model = InceptionV3([block_idx]).to(device)
+
+    d1_images = [torch.unsqueeze(dataset1[i][0], 0) for i in range(len(dataset1))]
+    d2_images = [torch.unsqueeze(dataset2[i][0], 0) for i in range(len(dataset2))]
+
+    mean_d1, std_d1 = inception_activation_statistics(d1_images, model, device)
+    mean_d2, std_d2 = inception_activation_statistics(d2_images, model, device)
+
+    fd = frechet_distance(mean_d1, std_d1, mean_d2, std_d2)
+    return fd
+
+

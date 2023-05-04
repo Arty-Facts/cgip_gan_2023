@@ -1,5 +1,6 @@
 from datetime import datetime
 from utils.utils import run_cmd
+import logging
 
 class MetaData:
     def __init__(self) -> None:
@@ -31,8 +32,10 @@ class MetaData:
 
     def get_last(self, name):
         if name not in self.data:
+            logging.warning(f"Item {name} not found in meta data")
             return None, None
         if not isinstance(self.data[name], (list, tuple)):
+            logging.warning(f"Item {name} is not a collection")
             return None, None
         return self.data[name][-1]
     

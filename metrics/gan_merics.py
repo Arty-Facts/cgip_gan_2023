@@ -32,7 +32,7 @@ class LFDS:
 
 class FID:
     """Latent Frechet Distance Score"""
-    def __init__(self, supervisor, generator, data,dims=2048, samples=100):
+    def __init__(self, supervisor, generator, data, dims=2048, samples=100):
         self.supervisor = supervisor
         self.generator = generator
         self.samples = samples
@@ -40,21 +40,17 @@ class FID:
         block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
         device = self.supervisor.target_device
         self.model = InceptionV3([block_idx]).to(device)
+        data = self.supervisor[self.data].dataset
+        real_images = [torch.unsqueeze(data[i][0], 0) for i in range(len(data))]
+        self.mean_real, self.std_real = inception_activation_statistics(real_images, self.model, device)
+
 
     def __call__(self):
         generator = self.supervisor[self.generator]
-        data = self.supervisor[self.data].dataset
         device = self.supervisor.target_device
-
         fake_images = [generator(torch.randn(1, generator.z_dim, device=device)) for _ in range(self.samples)]
-        subset, _ = random_split(data, [self.samples, len(data) - self.samples])
-
-        real_images = [torch.unsqueeze(subset[i][0], 0) for i in range(self.samples)]
-        
-        mean_real, std_real = inception_activation_statistics(real_images, self.model, device)
         mean_fake, std_fake = inception_activation_statistics(fake_images, self.model, device)
-
-        fd = frechet_distance(mean_real, std_real, mean_fake, std_fake)
+        fd = frechet_distance(self.mean_real, self.std_real, mean_fake, std_fake)
         return fd
 
 
