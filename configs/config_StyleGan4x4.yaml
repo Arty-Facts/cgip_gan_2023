@@ -73,7 +73,7 @@ trainer:
   module: trainers.gan_trainer
   name: StyleGanTrainer
   args: 
-    epochs: 1000
+    epochs: 250
     data: train
     generator: netG
     discriminator: netD
