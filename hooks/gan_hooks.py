@@ -127,14 +127,15 @@ class TensorboardScalarData:
                 self.writer.add_scalar(f"{self.name}/{target}", float(s[target]), global_step=s.meta[self.global_steps])
 
 class ConsoleStats:
-    def __init__(self, supervisor, targets, every=100):
+    def __init__(self, supervisor, targets, every=100, smoothing=0):
         self.every = every
         self.supervisor = supervisor
         self.targets = targets
+        self.smoothing = smoothing
 
     def start(self):
         s = self.supervisor
-        self.bar = tqdm(total=s.meta["end_epochs"], initial=s.meta["epochs"])
+        self.bar = tqdm(total=s.meta["end_epochs"], initial=s.meta["epochs"], smoothing=self.smoothing)
         self.bar.set_description(f'Epochs')
 
     def epoch_end(self):

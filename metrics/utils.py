@@ -154,7 +154,7 @@ def activation_statistics(images, model, device='cpu',):
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
 
-@nb.jit(nopython=True, cache=True)
+@nb.njit(cache=True)
 def numpy_cosine_similarity(a, b):
     dot_product = np.dot(a, b)
     norm_a = np.linalg.norm(a)
@@ -175,7 +175,7 @@ def cosine_similarity(a, b):
         raise TypeError(f'imgs1 and imgs2 must be both numpy.ndarray or torch.Tensor but got {type(imgs1)} and {type(imgs2)}')
 
 
-@nb.jit(nopython=True, cache=True)
+@nb.njit(cache=True)
 def numpy_compute_mean_and_variance(images):
     # Concatenate the images into a single NumPy array
     image_array = np.stack(images, axis=0)
@@ -203,7 +203,7 @@ def compute_mean_and_variance(images):
         raise TypeError(f'imgs1 and imgs2 must be both numpy.ndarray or torch.Tensor but got {type(imgs1)} and {type(imgs2)}')
 
 
-@nb.jit(nopython=True, cache=True)
+@nb.njit(cache=True)
 def numpy_mean_var_cosine_similarity(imgs1, imgs2):
     mean1, var1 = numpy_compute_mean_and_variance(imgs1)
     mean2, var2 = numpy_compute_mean_and_variance(imgs2)

@@ -33,7 +33,7 @@ class StyleGanTrainer:
         self.optimizer_discriminator = optimizer_discriminator 
         self.supervisor.meta["epochs"] = 0
         self.supervisor.meta["end_epochs"] = epochs
-        self.supervisor.meta["best_score"] = float("inf")
+        self.supervisor.meta["best_score"] = float("nan")
         self.generator_loss = generator_loss
         self.discriminator_loss = discriminator_loss
 
