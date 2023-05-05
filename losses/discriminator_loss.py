@@ -24,7 +24,7 @@ class GradientPenalty():
         gradient = gradient.view(gradient.shape[0], -1)
         gradient_norm = gradient.norm(2, dim=1)
         gradient_penalty = torch.mean((gradient_norm - 1) ** 2)
-        return self.lambda_gb, gradient_penalty
+        return gradient_penalty
     
 class WassersteinDistance():
     def __init__(self, scale=0.001):

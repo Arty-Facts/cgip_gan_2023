@@ -2,13 +2,26 @@
 import torch
 from torch import nn
 
-class ID_Layer(nn.Sequential):
-    def __init__(self, *args):
-        super().__init__(*args)
+
+class Parameter(nn.Module):
+    def __init__(self, parameter):
+        super().__init__()
+        self.parameter = nn.Parameter(parameter)
+    def forward(self, *args):
+        return self.parameter
+class ID_Layer(nn.Module):
+    def __init__(self, module, name=""):
+        super().__init__()
+        self.module = module
         self.pretrained = False
+        self.name = name
         
     def id(self):
-        return super().__str__().replace('\n', '')
+        return f"{self.name}:"+ super().__str__().replace('\n', '').replace(' ', '')
+    
+    def forward(self, *args, **kwargs):
+        return self.module( *args, **kwargs)
+    
 
 class WSLinear(nn.Module):
     def __init__(
@@ -101,8 +114,10 @@ class WSConv2d(nn.Module):
         return self.conv(x * self.scale) + self.bias.view(1, self.bias.shape[0], 1, 1)
 
 class StyleGanInitBlock(nn.Module):
-    def __init__(self, in_channel, out_channel, w_dim, leakyInReLU=0.2):
+    def __init__(self, in_channel, out_channel, w_dim, start_size, leakyInReLU=0.2):
         super().__init__()
+        h, w = start_size
+        self.starting_cte = nn.Parameter(torch.ones(1, in_channel, h, w))
         self.in_channel, self.out_channel, self.w_dim, self.leakyInReLU = in_channel, out_channel, w_dim, leakyInReLU
         self.conv1 = nn.Conv2d(in_channel, in_channel, kernel_size=3, stride=1, padding=1)
         self.leaky = nn.LeakyReLU(leakyInReLU, inplace=True)
@@ -110,8 +125,9 @@ class StyleGanInitBlock(nn.Module):
         self.inject_noise2 = InjectNoise(out_channel)
         self.adain1 = AdaIN(out_channel, w_dim)
         self.adain2 = AdaIN(out_channel, w_dim)
-        self.pretraied = False
-    def forward(self, x,w):
+
+    def forward(self, w):
+        x = self.starting_cte
         x = self.adain1(self.leaky(self.inject_noise1(x)), w)
         x = self.adain2(self.leaky(self.inject_noise2(self.conv1(x))), w)
         return x
@@ -127,24 +143,49 @@ class StyleGanBlock(nn.Module):
         self.inject_noise2 = InjectNoise(out_channel)
         self.adain1 = AdaIN(out_channel, w_dim)
         self.adain2 = AdaIN(out_channel, w_dim)
-        self.pretraied = False
+
     def forward(self, x, w):
         x = self.adain1(self.leaky(self.inject_noise1(self.conv1(x))), w)
         x = self.adain2(self.leaky(self.inject_noise2(self.conv2(x))), w)
         return x
     
-class ConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super(ConvBlock, self).__init__()
-        self.conv1 = WSConv2d(in_channels, out_channels)
-        self.conv2 = WSConv2d(out_channels, out_channels)
-        self.leaky = nn.LeakyReLU(0.2)
+class WSConvLeakyBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, leakyInReLU=0.2):
+        super().__init__()
+        self.conv1 = WSConv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.conv2 = WSConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+        self.leaky = nn.LeakyReLU(leakyInReLU)
 
     def forward(self, x):
         x = self.leaky(self.conv1(x))
         x = self.leaky(self.conv2(x))
         return x
     
+class WSConvReluBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+        super().__init__()
+        self.conv1 = WSConv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.conv2 = WSConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
+        return x
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, Conv, activation, kernel_size=3, stride=1, padding=1, depth=2):
+        super().__init__()
+        self.layers = nn.ModuleList(
+            [Conv(in_channels, out_channels, kernel_size, stride, padding)] +
+            [Conv(out_channels, out_channels, kernel_size=3, stride=1, padding=1) for _ in range(depth-1)]
+            )
+        self.activation = activation
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = self.activation(layer(x))
+        return x
 class MiniBatchSTD(nn.Module):
     """Minibatch standard deviation layer for the discriminator"""
     def __init__(self):

@@ -5,3 +5,8 @@ notebook
 tqdm
 scipy
 ipympl
+ipykernel
+ipywidgets
+tensorboard
+torch-summary
+numba

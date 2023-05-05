@@ -1,7 +1,7 @@
 import importlib
 import torchvision
 from typing import Any, Union
-from utils.utils import save_to_yaml
+from utils.utils import save_to_yaml, load_from_yaml
 from hooks.hook_handler import HookHandler
 
 
@@ -11,14 +11,26 @@ class ValueAccumulator:
         self.name = "+".join(map(lambda sf: f"{sf[0]}*{sf[1].__class__.__name__}", sorted(self.scales_and_funs, key=lambda sf:sf[1].__class__.__name__)))
     def __repr__(self) -> str:
         return self.name
-    def __call__(self, yhats, ys):
-        score = sum(map(lambda sf: sf[0]*sf[1](yhats, ys), self.scales_and_funs))
+    def __call__(self, *args, **kvargs):
+        score = sum(map(lambda sf: sf[0]*sf[1](*args, **kvargs), self.scales_and_funs))
         return score
 
 def load_module(module, func, *args, **kvargs):
     mod = importlib.import_module(module)
     func = getattr(mod, func)
     return func(*args, **kvargs)
+
+def load_model(target, path):
+    config = load_from_yaml(path)
+    models = {}
+    setup_models(models, config["models"])
+    return models[target]
+
+def load_data(target, path):
+    config = load_from_yaml(path)
+    data = {}
+    setup_data(data, config["data"])
+    return data[target]
 
 def setup_module(par, **kvargs) -> Any:
     if isinstance(par, dict):
@@ -51,7 +63,7 @@ def setup_data(supervisor, par) -> None:
 
 def setup_models(supervisor, par) -> None:
     for name, conf in par.items():
-        model = setup_module(conf).to(supervisor.target_device)
+        model = setup_module(conf)#.to(supervisor.target_device)
         supervisor[name] = model
 
 def setup_optimizer(supervisor, par):
@@ -66,13 +78,13 @@ def setup_optimizers(supervisor, par) -> None:
 
 def setup_loss(supervisor, par):
     if par != None:
-        for name, losses in par.items():
+        for target_name, losses in par.items():
             acc_loss = []
             for scale, module, name, args in losses: 
                 fun = load_module(module, name, **args)
                 acc_loss.append((scale, fun))
             loss = ValueAccumulator(acc_loss)
-            supervisor[name] = loss
+            supervisor[target_name] = loss
 
 def setup_score(supervisor, par) -> None:
     score = []
