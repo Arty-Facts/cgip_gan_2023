@@ -19,12 +19,8 @@ class SaveToDir:
     def ping(self):
         assert self.epoch_end_done
 
-    def epoch_end(self):
-        self.epoch_end_done = True
-        epochs = self.supervisor.meta["epochs"]
-
-        if epochs % self.every == 0:
-            for name, target in self.targets.items():
+    def _save(self):
+        for name, target in self.targets.items():
                 path = self.path / target
                 item = self.supervisor[name]
                 if isinstance(item, torch.nn.DataParallel):
@@ -34,8 +30,18 @@ class SaveToDir:
                 else:
                     data = item.state_dict()
                 SAVE[path.suffix](data, path)
-                logging.info(f"Saved {name} to {path}")
+                logging.debug(f"Saved {name} to {path}")
 
+
+    def epoch_end(self):
+        self.epoch_end_done = True
+        epochs = self.supervisor.meta["epochs"]
+
+        if epochs % self.every == 0:
+            self._save()
+            
+    def end(self):
+        self._save()
 
 class SaveAll:
     def __init__(self, supervisor, targets, every):
@@ -47,26 +53,32 @@ class SaveAll:
     def ping(self):
         assert self.epoch_end_done
 
+    def _save(self):
+        images = self.supervisor.meta["images"]
+        model_path = self.supervisor.base_path / "history" / f"{images}"
+        model_path.mkdir(parents=True, exist_ok=True)
+        for name, target in self.targets.items():
+            item = self.supervisor[name]
+            if isinstance(item, torch.nn.DataParallel):
+                data = item.module.state_dict()
+            if isinstance(item, dict):
+                data = item
+            else:
+                data = item.state_dict()
+            path = model_path / target
+            SAVE[path.suffix](data, path)
+            logging.debug(f"Saved {name} to {path}")
+
     def epoch_end(self):
         self.epoch_end_done = True
         epochs = self.supervisor.meta["epochs"]
 
         if epochs % self.every == 0:
-            images = self.supervisor.meta["images"]
+            self._save()
+            
 
-            model_path = self.supervisor.base_path / "history" / f"{images}"
-            model_path.mkdir(parents=True, exist_ok=True)
-            for name, target in self.targets.items():
-                item = self.supervisor[name]
-                if isinstance(item, torch.nn.DataParallel):
-                    data = item.module.state_dict()
-                if isinstance(item, dict):
-                    data = item
-                else:
-                    data = item.state_dict()
-                path = model_path / target
-                SAVE[path.suffix](data, path)
-                logging.info(f"Saved {name} to {path}")
+    def end(self):
+        self._save()
 
 class SaveBest:
     def __init__(self, supervisor, targets, every):
@@ -81,24 +93,30 @@ class SaveBest:
     def ping(self):
         assert self.epoch_end_done
 
+    def _save(self):
+        score = self.supervisor["score"](self.supervisor.meta)
+        if self.best_score is None:
+            self.best_score = score
+        if score <= self.best_score:
+            for name, target in self.targets.items():
+                path = self.path / target
+                item = self.supervisor[name]
+                if isinstance(item, torch.nn.DataParallel):
+                    data = item.module.state_dict()
+                if isinstance(item, dict):
+                    data = item
+                else:
+                    data = item.state_dict()
+                SAVE[path.suffix](data, path)
+                logging.debug(f"Saved {name} to {path}")
+            self.best_score = score
+
     def epoch_end(self):
         self.epoch_end_done = True
         epochs = self.supervisor.meta["epochs"]
 
         if epochs % self.every == 0:
-            score = self.supervisor["score"](self.supervisor.meta)
-            if self.best_score is None:
-                self.best_score = score
-            if score <= self.best_score:
-                for name, target in self.targets.items():
-                    path = self.path / target
-                    item = self.supervisor[name]
-                    if isinstance(item, torch.nn.DataParallel):
-                        data = item.module.state_dict()
-                    if isinstance(item, dict):
-                        data = item
-                    else:
-                        data = item.state_dict()
-                    SAVE[path.suffix](data, path)
-                    logging.info(f"Saved {name} to {path}")
-                self.best_score = score
+            self._save()
+
+    def end(self):
+        self._save()

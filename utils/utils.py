@@ -42,12 +42,28 @@ def set_seed(seed: int = 1337) -> None:
     logging.info(f"Random seed set as {seed}")
 
 def update_dict(container, updates):
-    for update in updates:
-        path, value = update.split('=')
-        path = path.split('.')
-        config = update_dict_recursively(path, value, container)
-        logging.info(f"Updated {path} to {value}")
+    if isinstance(updates, dict):
+        config = dict_updater(container, updates)
+    else:
+        for update in updates:
+            path, value = update.split('=')
+            path = path.split('.')
+            config = update_dict_recursively(path, value, container)
+            logging.info(f"Updated {path} as {value}")
     return config
+
+def dict_updater(container, updates):
+    for key, value in updates.items():
+        if key not in container:
+            container[key] = value
+            logging.debug(f"Added {key} as {value}")
+        else:
+            if isinstance(value, dict):
+                dict_updater(container[key], value)
+            else:
+                container[key] = value
+                logging.debug(f"Updated {key} as {value}")
+    return container
 
 def update_dict_recursively(path, value, container):
     """Update a dictionary recursively"""

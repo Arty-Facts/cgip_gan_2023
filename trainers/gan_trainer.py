@@ -2,6 +2,7 @@ from typing import Any
 from utils.setup import setup_module
 from utils.utils import set_seed
 import torch
+import logging
 
 def to_device(optimizer, device="cpu"):
     for state in optimizer.state.values():
@@ -37,23 +38,33 @@ class StyleGanTrainer:
         self.discriminator_loss = discriminator_loss
 
     def __call__(self) -> Any:
+        sup = self.supervisor
+        hooks = sup["hooks"]
+        hooks.call("init")
+
         c = self.supervisor.cache
-        c.data = self.supervisor[self.data]
-        hooks = self.supervisor["hooks"]
-        device = self.supervisor.target_device
-        set_seed(self.supervisor.meta["seed"])
+        meta = self.supervisor.meta
+        start = meta["epochs"]
+        end = meta["end_epochs"]
+        if start >= end:
+            logging.info(f"Training already completed for {end} epochs")
+            return meta["best_score"]
+
+        c.data = sup[self.data]
+        device = sup.target_device
+        set_seed(meta["seed"])
         
         hooks.call("start")
-        for epoch in range(self.supervisor.meta["epochs"], self.supervisor.meta["end_epochs"]):
+        for epoch in range(start, end + 1):
             hooks.call("epoch_begin")
-            netD = self.supervisor[self.discriminator].to(device)
-            netG = self.supervisor[self.generator].to(device)
+            netD = sup[self.discriminator].to(device)
+            netG = sup[self.generator].to(device)
 
-            optD = to_device(self.supervisor[self.optimizer_discriminator], device)
-            optG = to_device(self.supervisor[self.optimizer_generator], device)
+            optD = to_device(sup[self.optimizer_discriminator], device)
+            optG = to_device(sup[self.optimizer_generator], device)
 
-            lossG = self.supervisor[self.generator_loss]
-            lossD = self.supervisor[self.discriminator_loss]
+            lossG = sup[self.generator_loss]
+            lossD = sup[self.discriminator_loss]
             for real, labels in c.data:
                 hooks.call("batch_start")
                 c.labels = labels.to(device)
@@ -76,15 +87,15 @@ class StyleGanTrainer:
                 c.loss_gen.backward()
                 optG.step()
 
-                self.supervisor.meta["steps"] += 1
-                self.supervisor.meta["images"] += c.cur_batch_size
+                meta["steps"] += 1
+                meta["images"] += c.cur_batch_size
                 hooks.call("batch_end")
-            self.supervisor.meta["best_score"] = min(self.supervisor.meta["best_score"], self.supervisor["score"](self.supervisor.meta)[1])
-            self.supervisor.meta["epochs"] = epoch
+            meta["best_score"] = min(meta["best_score"], sup["score"](meta))
+            meta["epochs"] = epoch
             hooks.call("epoch_end")
             hooks.call("ping")
         hooks.call("end")
 
-        return self.supervisor.meta["best_score"]
+        return meta["best_score"]
         
         

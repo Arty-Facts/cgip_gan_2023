@@ -89,9 +89,13 @@ def setup_loss(supervisor, par):
 
 def setup_score(supervisor, par) -> None:
     score = []
-    fun = lambda name, meta: meta.get_last(name)[1]
+    def get_latest(name, meta):
+        result = meta.get_last(name)[1]
+        if result is None:
+            return float("inf")
+        return result
     for scale, name in par: 
-        score.append((scale, partial(fun, name)))
+        score.append((scale, partial(get_latest, name)))
     score = ValueAccumulator(score)
     supervisor["score"] = score
 

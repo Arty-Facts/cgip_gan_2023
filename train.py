@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # logging.WARNING,
     # logging.ERROR,
     # logging.CRITICAL
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
     # logging.disable(logging.DEBUG)
     config = load_from_yaml(args.config)
     if args.training_config is None:
