@@ -1,0 +1,100 @@
+supervisor:
+  module: supervisors.supervisor
+  name: Supervisor
+  args:
+    name: StyleGan4x4
+    version: 0
+    seed: 1337
+    device: cuda
+    nodes: [0]
+    checkpoint: 'd:checkpoints'
+data:
+  train:
+    dataset:
+      module: torchvision.datasets
+      name: Flowers102
+      args:
+        root: data
+        split: train
+        download: true
+    transforms:
+        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
+        - [torchvision.transforms, Resize, {size: [4, 4]}]
+        - [torchvision.transforms, ToTensor, {}]
+        - [torchvision.transforms, RandomHorizontalFlip, {p: 0.5}]
+        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
+    dataloader:
+      module: torch.utils.data
+      name: DataLoader
+      args:
+        batch_size: 256
+        num_workers: 0
+        shuffle: true
+        drop_last: true
+models:
+  netG:
+      module: models.generator
+      name: StyleGan_Generator
+      args: 
+        z_dim: 512
+        w_dim: 512
+        out_channels: 3
+        latent_channels: [512]
+  netD:
+    module: models.discriminator
+    name: discriminator_avgpool
+    args: 
+      in_channels: 3
+      latent_channels: [512]
+score: 
+  - [1.0, FID]
+loss:
+  lossG:
+    - [1.0, losses.generator_loss, MeanDiscriminatorLoss, {}]
+  lossD:
+    - [1.0, losses.discriminator_loss, WassersteinDistance, {scale: 0.001}]
+    - [10.0, losses.discriminator_loss, GradientPenalty, {}]
+optimizers:
+  optG:
+    module: torch.optim
+    name: Adam
+    target: netG
+    args:
+      lr: 0.0001
+      betas: [0.5, 0.99]
+  optD:
+    module: torch.optim
+    name: Adam
+    target: netD
+    args:
+      lr: 0.0001
+      betas: [0.5, 0.99]
+trainer:
+  module: trainers.gan_trainer
+  name: StyleGanTrainer
+  args: 
+    epochs: 250
+    data: train
+    generator: netG
+    discriminator: netD
+    optimizer_generator: optG
+    optimizer_discriminator: optD
+    generator_loss: lossG
+    discriminator_loss: lossD
+
+hooks:
+  - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
+  - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
+  - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
+  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID}]
+  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
+  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+  - [hooks.save, SaveBest, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
+  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
+
+
+
+
+

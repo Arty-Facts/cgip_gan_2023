@@ -8,4 +8,5 @@ saved_examples
 generator1024x1024.ptk
 checkpoints
 d:checkpoints
+checkpoints
 generator.ptk
