@@ -183,10 +183,9 @@ class UnfreezLayers:
             return
         s = self.supervisor
 
-        if s.meta["epochs"] == self.after:
+        if s.meta["epochs"] >= self.after:
             for target in self.targets:
                 for layer in s[target].layers:
-                    if layer.pretrained:
-                        for param in layer.parameters():
-                            param.requires_grad = True
-        self.done = True
+                    for param in layer.parameters():
+                        param.requires_grad = True
+            self.done = True

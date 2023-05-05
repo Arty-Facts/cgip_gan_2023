@@ -2,7 +2,7 @@ stage4x4:
   supervisor:
     args:
       version: 1
-      name: IncrementalStyleGan
+      name: IncrementalStyleGan_v2
       checkpoint: 'd:checkpoints'
   score: 
     - [1.0, FID]
@@ -40,11 +40,11 @@ stage8x8:
       args: 
           latent_channels: [256, 512]
   hooks:
-    - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/IncrementalStyleGan/1/best}]
+    - [hooks.load, Load, {targets: {netG: generator.pkl}, dir: d:checkpoints/IncrementalStyleGan_v2/1/best}]
     - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
-    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
+    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG]}]
     - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
     - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
     - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID}]
@@ -75,11 +75,11 @@ stage16x16:
       args: 
         latent_channels: [128, 256, 512]
   hooks:
-    - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/IncrementalStyleGan/2/best}]
+    - [hooks.load, Load, {targets: {netG: generator.pkl}, dir: d:checkpoints/IncrementalStyleGan_v2/2/best}]
     - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
-    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
+    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG]}]
     - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
     - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
     - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID}]
@@ -110,11 +110,11 @@ stage32x32:
       args: 
         latent_channels: [64, 128, 256, 512]
   hooks:
-    - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/IncrementalStyleGan/3/best}]
+    - [hooks.load, Load, {targets: {netG: generator.pkl}, dir: d:checkpoints/IncrementalStyleGan_v2/3/best}]
     - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
-    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
+    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG]}]
     - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
     - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
     - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID}]
@@ -145,11 +145,11 @@ stage64x64:
       args: 
         latent_channels: [32, 64, 128, 256, 512]
   hooks:
-    - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/IncrementalStyleGan/4/best}]
+    - [hooks.load, Load, {targets: {netG: generator.pkl}, dir: d:checkpoints/IncrementalStyleGan_v2/4/best}]
     - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
     - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
-    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
+    - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG]}]
     - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
     - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
     - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID}]
