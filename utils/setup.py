@@ -3,6 +3,7 @@ import torchvision
 from typing import Any, Union
 from utils.utils import save_to_yaml, load_from_yaml
 from hooks.hook_handler import HookHandler
+from functools import partial
 
 
 class ValueAccumulator:
@@ -88,9 +89,13 @@ def setup_loss(supervisor, par):
 
 def setup_score(supervisor, par) -> None:
     score = []
-    for scale, module, name, args in par: 
-        fun = load_module(module, name, **args)
-        score.append((scale, fun))
+    def get_latest(name, meta):
+        result = meta.get_last(name)[1]
+        if result is None:
+            return float("inf")
+        return result
+    for scale, name in par: 
+        score.append((scale, partial(get_latest, name)))
     score = ValueAccumulator(score)
     supervisor["score"] = score
 
@@ -115,7 +120,7 @@ def setup_experiment(config):
     setup_loss(supervisor, config["loss"])
     setup_hooks(supervisor, config["hooks"])
     setup_trainer(supervisor, config["trainer"])
-    # setup_score(supervisor, config["score"])
+    setup_score(supervisor, config["score"])
 
     save_to_yaml(config, supervisor.base_path / 'config.yaml')
     

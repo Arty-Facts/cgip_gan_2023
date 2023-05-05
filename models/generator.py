@@ -47,6 +47,6 @@ class StyleGan_Generator(nn.Module):
             if layer.id() in state_dict:
                 layer.load_state_dict(state_dict[layer.id()])
             else:
-                logging.warning(f'{self.__class__.__name__} {layer.id()[:80]}... not found in state_dict')
+                logging.debug(f'{self.__class__.__name__} {layer.id()[:80]}... not found in state_dict')
         
         return self

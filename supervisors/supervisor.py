@@ -43,4 +43,4 @@ class Supervisor:
         self.register[name] = value
 
     def fit(self):
-        self.register["trainer"]()
+        return self.register["trainer"]()

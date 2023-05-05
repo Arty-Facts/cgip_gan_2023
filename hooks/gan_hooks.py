@@ -1,5 +1,5 @@
 from torch.utils.tensorboard import SummaryWriter
-from metrics.gan_merics import LFDS, StatsCosineSimilarity
+from metrics.gan_merics import LFDS, StatsCosineSimilarity, FID
 import torchvision
 import torch
 from tqdm import tqdm
@@ -61,7 +61,29 @@ class TensorboardLFDS:
         if s.meta["epochs"] % self.every == 0:
             score = self.lfds()
             s.meta.append(f"{self.name}", float(score))
-            self.writer.add_scalar(f"{self.name}/{self.generator}", float(score), global_step=s.meta[self.global_steps])
+            self.writer.add_scalar(f"{self.name}", float(score), global_step=s.meta[self.global_steps])
+
+class TensorboardFID:
+    def __init__(self, supervisor, generator, data, dim=2048, samples=100, name="FID", global_steps="images",  every=100):
+        self.generator = generator
+        self.every = every
+        self.supervisor = supervisor
+        self.data = data
+        self.dim = dim
+        self.samples = samples
+        self.name = name
+        self.global_steps = global_steps
+        self.writer = SummaryWriter(self.supervisor.base_path)
+
+    def start(self):
+        self.fid = FID(self.supervisor, self.generator, self.data, self.dim, self.samples)
+
+    def epoch_end(self):
+        s = self.supervisor
+        if s.meta["epochs"] % self.every == 0:
+            score = self.fid()
+            s.meta.append(f"{self.name}", float(score))
+            self.writer.add_scalar(f"{self.name}", float(score), global_step=s.meta[self.global_steps])
 
 class TensorboardImageStatsCosineSimilarity:
     def __init__(self, supervisor, generator, data, samples=100, name="StatsCosineSimilarity", global_steps="images",  every=100):
@@ -112,7 +134,7 @@ class ConsoleStats:
 
     def start(self):
         s = self.supervisor
-        self.bar = tqdm(total=s.meta["end_epochs"], initial=s.meta["current_epochs"])
+        self.bar = tqdm(total=s.meta["end_epochs"], initial=s.meta["epochs"])
         self.bar.set_description(f'Epochs')
 
     def epoch_end(self):

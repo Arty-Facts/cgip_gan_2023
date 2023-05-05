@@ -31,48 +31,6 @@ data:
         num_workers: 0
         shuffle: true
         drop_last: true
-  val:
-    dataset:
-      module: torchvision.datasets
-      name: Flowers102
-      args:
-        root: data
-        split: val
-        download: true
-    transforms:
-        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [32, 32]}]
-        - [torchvision.transforms, ToTensor, {}]
-        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
-    dataloader:
-      module: torch.utils.data
-      name: DataLoader
-      args:
-        batch_size: 128
-        num_workers: 0
-        shuffle: true
-        drop_last: true
-  test:
-    dataset:
-      module: torchvision.datasets
-      name: Flowers102
-      args:
-        root: data
-        split: test
-        download: true
-    transforms:
-        - [torchvision.transforms, CenterCrop, {size: [512, 512]}]
-        - [torchvision.transforms, Resize, {size: [32, 32]}]
-        - [torchvision.transforms, ToTensor, {}]
-        - [torchvision.transforms, Normalize, {mean: [.5, .5, .5], std: [.5, .5, .5]}]
-    dataloader:
-      module: torch.utils.data
-      name: DataLoader
-      args:
-        batch_size: 128
-        num_workers: 0
-        shuffle: true
-        drop_last: true
 models:
   netG:
       module: models.generator
@@ -84,7 +42,7 @@ models:
         latent_channels: [512, 256, 128, 64]
   netD:
     module: models.discriminator
-    name: discriminator_maxpool
+    name: discriminator_avgpool
     args: 
       in_channels: 3
       latent_channels: [64, 128, 256, 512]
@@ -115,7 +73,7 @@ trainer:
   module: trainers.gan_trainer
   name: StyleGanTrainer
   args: 
-    epochs: 1000
+    epochs: 250
     data: train
     generator: netG
     discriminator: netD
@@ -131,9 +89,9 @@ hooks:
   - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
   - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
   - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
-  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
   - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
   - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
 
 
 
