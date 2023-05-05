@@ -5,3 +5,7 @@ tmp
 __pycache__
 data
 saved_examples
+generator1024x1024.ptk
+checkpoints
+d:checkpoints
+generator.ptk
