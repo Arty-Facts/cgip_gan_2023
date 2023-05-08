@@ -10,3 +10,5 @@ ipywidgets
 tensorboard
 torch-summary
 numba
+optuna
+optuna-dashboard
