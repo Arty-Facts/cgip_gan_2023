@@ -4,6 +4,17 @@ import torch
 import numba as nb
 from metrics.inception import InceptionV3
 
+from torch.utils.data import random_split
+
+def generate_samples(generator, samples, device):
+    return [generator(torch.randn(1, generator.z_dim, device=device)).detach().cpu() for _ in range(samples)]
+
+def get_samples(data, samples):
+    if len(data) < samples:
+        raise ValueError("Not enough data samples")
+    if len(data) > samples:
+        data , _ = random_split(data, [samples, len(data) - samples])
+    return [torch.unsqueeze(data[i][0], 0) for i in range(samples)]
 
 def get_activations(images, model, device='cpu'):
     """Calculates the activations of the pool_3 layer for all images.

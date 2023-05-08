@@ -33,10 +33,10 @@ class MetaData:
     def get_last(self, name):
         if name not in self.data:
             logging.warning(f"Item {name} not found in meta data")
-            return None, float("nan")
+            return None, float("inf")
         if not isinstance(self.data[name], (list, tuple)):
             logging.warning(f"Item {name} is not a collection")
-            return None, float("nan")
+            return None, float("inf")
         return self.data[name][-1]
     
     def keys(self):

@@ -1,14 +1,16 @@
 from torch.utils.tensorboard import SummaryWriter
 from metrics.gan_merics import LFDS, StatsCosineSimilarity, FID
+from metrics.utils import get_samples
 import torchvision
 import torch
 from tqdm import tqdm
 
 class TensorboardGenerateImageSample:
-    def __init__(self, supervisor, target_model=None, samples=32, global_steps="images", every=100):
+    def __init__(self, supervisor, target_model, data="train", samples=32, global_steps="images", every=100):
         self.target_model = target_model 
         self.samples = samples
         self.every = every
+        self.data = data
 
         self.start_done = False
         self.epoch_end_done = False
@@ -23,6 +25,11 @@ class TensorboardGenerateImageSample:
         self.start_done = True
         self.device = self.supervisor.target_device
         self.writer = SummaryWriter(self.supervisor.base_path)
+        data = self.supervisor[self.data].dataset
+        real_images = get_samples(data, self.samples)
+
+        img_grid_real = torchvision.utils.make_grid(torch.cat(real_images), normalize=True)
+        self.writer.add_image(f"Target/{self.target_model}", img_grid_real, global_step=0)
 
         self.image_path = self.supervisor.base_path / "gen_images"
         self.image_path.mkdir(parents=True, exist_ok=True)
@@ -56,7 +63,7 @@ class TensorboardLFDS:
         self.global_steps = global_steps
         self.writer = SummaryWriter(self.supervisor.base_path)
 
-    def epoch_end(self):
+    def epoch_score(self):
         s = self.supervisor
         if s.meta["epochs"] % self.every == 0:
             score = self.lfds()
@@ -78,7 +85,7 @@ class TensorboardFID:
     def start(self):
         self.fid = FID(self.supervisor, self.generator, self.data, self.dim, self.samples)
 
-    def epoch_end(self):
+    def epoch_score(self):
         s = self.supervisor
         if s.meta["epochs"] % self.every == 0:
             score = self.fid()
@@ -95,7 +102,7 @@ class TensorboardImageStatsCosineSimilarity:
         self.global_steps = global_steps
         self.writer = SummaryWriter(self.supervisor.base_path)
 
-    def epoch_end(self):
+    def epoch_score(self):
         s = self.supervisor
         if s.meta["epochs"] % self.every == 0:
             mean_cos, var_cos, stack_cos, cov_cos, vmr_cos = self.imvcs()
@@ -120,7 +127,7 @@ class TensorboardScalarData:
         self.global_steps = global_steps
         self.writer = SummaryWriter(self.supervisor.base_path)
 
-    def batch_end(self):
+    def epoch_score(self):
         s = self.supervisor
         if s.meta["steps"] % self.every == 0:
             for target in self.targets:

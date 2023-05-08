@@ -1,7 +1,8 @@
 
-from metrics.utils import activation_statistics, frechet_distance, mean_var_cosine_similarity, inception_activation_statistics
+from metrics.utils import (
+    activation_statistics, frechet_distance, mean_var_cosine_similarity, 
+    inception_activation_statistics, generate_samples, get_samples)
 import torch
-from torch.utils.data import random_split
 from metrics.inception import InceptionV3
 
 class LFDS:
@@ -19,10 +20,8 @@ class LFDS:
         encoder = self.supervisor[self.encoder]
         device = self.supervisor.target_device
 
-        fake_images = [generator(torch.randn(1, generator.z_dim, device=device)) for _ in range(self.samples)]
-        subset, _ = random_split(data, [self.samples, len(data) - self.samples])
-
-        real_images = [torch.unsqueeze(subset[i][0], 0) for i in range(self.samples)]
+        fake_images = generate_samples(generator, self.samples, device)
+        real_images = get_samples(data, self.samples)
         
         mean_real, std_real = activation_statistics(real_images, encoder, device)
         mean_fake, std_fake = activation_statistics(fake_images, encoder, device)
@@ -41,14 +40,14 @@ class FID:
         device = self.supervisor.target_device
         self.model = InceptionV3([block_idx]).to(device)
         data = self.supervisor[self.data].dataset
-        real_images = [torch.unsqueeze(data[i][0], 0) for i in range(len(data))]
+        real_images = get_samples(data, self.samples)
         self.mean_real, self.std_real = inception_activation_statistics(real_images, self.model, device)
 
 
     def __call__(self):
         generator = self.supervisor[self.generator]
         device = self.supervisor.target_device
-        fake_images = [generator(torch.randn(1, generator.z_dim, device=device)) for _ in range(self.samples)]
+        fake_images = generate_samples(generator, self.samples, device)
         mean_fake, std_fake = inception_activation_statistics(fake_images, self.model, device)
         fd = frechet_distance(self.mean_real, self.std_real, mean_fake, std_fake)
         return fd
@@ -68,12 +67,9 @@ class StatsCosineSimilarity:
         device = self.supervisor.target_device
 
         # avg_pool = torch.nn.AdaptiveAvgPool2d((4, 4))
-        avg_pool = torch.nn.Identity()
 
-        fake_images = [avg_pool(generator(torch.randn(1, generator.z_dim, device=device))) for _ in range(self.samples)]
-        subset, _ = random_split(data, [self.samples, len(data) - self.samples])
-
-        real_images = [torch.unsqueeze(avg_pool(subset[i][0].to(device)), 0) for i in range(self.samples)]
+        fake_images = generate_samples(generator, self.samples, device)
+        real_images = get_samples(data, self.samples)
 
         mean_cos, var_cos, stack_cos, cov_cos, vmr_cos = mean_var_cosine_similarity(real_images, fake_images)
         return 1-abs(mean_cos), 1-abs(var_cos), 1-abs(stack_cos), 1-abs(cov_cos), 1-abs(vmr_cos)

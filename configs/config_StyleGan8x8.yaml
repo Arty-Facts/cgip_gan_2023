@@ -47,7 +47,7 @@ models:
       in_channels: 3
       latent_channels: [256, 512]
 score: 
-  - [1.0, metrics.gan_metrics, ---, {samples: 100}]
+  - [1.0, FID]
 loss:
   lossG:
     - [1.0, losses.generator_loss, MeanDiscriminatorLoss, {}]
@@ -73,7 +73,7 @@ trainer:
   module: trainers.gan_trainer
   name: StyleGanTrainer
   args: 
-    epochs: 250
+    epochs: 10
     data: train
     generator: netG
     discriminator: netD
@@ -85,12 +85,14 @@ trainer:
 hooks:
   # - [hooks.load, Load, {targets: {netG: generator.pkl, netD: discriminator.pkl}, dir: d:checkpoints/StyleGan4x4/6/latest}]
   - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
-  - [hooks.save, Save, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   # - [hooks.gan_hooks, UnfreezLayers, {after: 10, targets: [netG, netD]}]
   - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
   - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
-  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
-  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 10, name: FID}]
+  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 10}]
+  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 10}]
+  - [hooks.save, SaveBest, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
   - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
 
 
