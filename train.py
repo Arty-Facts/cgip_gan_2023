@@ -1,7 +1,7 @@
 from utils.setup import setup_experiment
 from multiprocessing import freeze_support
 import argparse, torch, logging
-from utils.utils import load_from_yaml, update_dict
+from utils.utils import load_from_yaml, update_dict, optuna_traing_conf
 import optuna
 
 def train(config, updates=None):
@@ -23,16 +23,12 @@ def train_plan(config, training_config, updates=None):
 def train_opt(config, optimize_config, updates=None):
     parameters = optimize_config.pop("parameters")
     trials = int(optimize_config.pop("trials"))
-
+    db = optimize_config.pop("db")
     def objective(trial):
-        update_dict(config, optimize_config)
-        update_dict(config, { "seed": trial.suggest_int("seed", 0, 1000) })
-        if updates is not None:
-            update_dict(config, updates)
-        experiment = setup_experiment(config)
-        return experiment.fit()
+        training_conf = optuna_traning_config(optimize_config, parameters, trial)
+        return train_plan(config, training_conf, updates)
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=trials)
+    study.optimize(objective, n_trials=trials, storage=db)
     return study.best_value
 
 if __name__ == '__main__':

@@ -74,3 +74,7 @@ def update_dict_recursively(path, value, container):
         container[path[0]] = {}
         return update_dict_recursively(path[1:], value, container[path[0]])
     return update_dict_recursively(path[1:], value, container[path[0]])
+
+
+def optuna_traning_config(optimize_config, parameters, trial):
+    

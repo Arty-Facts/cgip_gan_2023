@@ -68,4 +68,6 @@ parameters:
   GP: [float, 0.0, 20.0, uniform]
   SCALE_WD: [float, 0.0001, 0.01, log]
 trials: 100
+db: sqlite:////d:checkpoints/Optimize4x4/optuna.db
+```
 
