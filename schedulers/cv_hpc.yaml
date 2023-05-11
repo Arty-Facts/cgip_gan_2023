@@ -1,16 +1,16 @@
 cuda:0:
   device: cuda
   node: 0
-  processes: 4
+  processes: 2
 cuda:1:
   device: cuda
   node: 1
-  processes: 4
+  processes: 2
 cuda:2:
   device: cuda
   node: 2
-  processes: 4
+  processes: 2
 cuda:3:
   device: cuda
   node: 3
-  processes: 4
+  processes: 2

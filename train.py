@@ -3,7 +3,6 @@ import argparse, torch, logging, time, multiprocessing, optuna
 from utils.utils import load_from_yaml, update_dict, optuna_traning_config, schedul_study
 from pathlib import Path
 from functools import partial
-from collections import defaultdict
 
 def train(config, updates=None):
     if updates is not None:

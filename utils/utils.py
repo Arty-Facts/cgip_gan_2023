@@ -1,5 +1,7 @@
 
-import subprocess, yaml, json, numpy, torch, random, os, logging, re, optuna
+import subprocess, yaml, json, numpy, torch, random, os, logging, re, optuna, multiprocessing, time
+from collections import defaultdict
+from functools import partial
 
 def ask_tell_optuna(objective_func, study_name, storage_name):
     study = optuna.create_study(direction="minimize", study_name=study_name, storage=storage_name, load_if_exists=True)
@@ -26,7 +28,7 @@ def schedul_study(scheduler_config, func, config, parameters, optimize_config, u
             objective = partial(func, config, parameters, optimize_config, updates)
             
             while trials_left > 0 and len(running_processes[name]) < processes:
-                p = multiprocessing.Process(target=ask_tell_optuna, args=(objective,))
+                p = multiprocessing.Process(target=ask_tell_optuna, args=(objective, study_name, storage_name))
                 p.start()
                 time.sleep(1)
                 running_processes[name].append(p)
