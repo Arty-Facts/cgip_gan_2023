@@ -2,6 +2,7 @@
 import subprocess, yaml, json, numpy, torch, random, os, logging, re, optuna, multiprocessing, time
 from collections import defaultdict
 from functools import partial
+import copy
 
 def ask_tell_optuna(objective_func, study_name, storage_name):
     study = optuna.create_study(direction="minimize", study_name=study_name, storage=storage_name, load_if_exists=True)
@@ -18,14 +19,14 @@ def schedul_study(scheduler_config, func, config, parameters, optimize_config, u
             device = conf["device"]
             node = conf["node"]
             processes = conf["processes"]
-            if device == "cuda":
-                device = f"{device}:{node}"
             if updates is None:
-                updates = []
-            updates.append(f"supervisor.args.device={device}")
-            updates.append(f"supervisor.args.nodes=[{device}]")
+                _updates = []
+            else:
+                _updates = copy.copy(updates)
+            _updates.append(f"supervisor.args.device={device}")
+            _updates.append(f"supervisor.args.nodes=[{node}]")
             logging.debug(f"Device: {device} Node: {node} Processes: {processes}")
-            objective = partial(func, config, parameters, optimize_config, updates)
+            objective = partial(func, config, parameters, optimize_config, _updates)
             
             while trials_left > 0 and len(running_processes[name]) < processes:
                 p = multiprocessing.Process(target=ask_tell_optuna, args=(objective, study_name, storage_name))
@@ -38,7 +39,7 @@ def schedul_study(scheduler_config, func, config, parameters, optimize_config, u
             for process in active_processes:
                 if not process.is_alive():
                     running_processes[name].remove(process)
-        time.sleep(0.1)  # Adjust as needed to control the frequency of checking
+        time.sleep(1)  # Adjust as needed to control the frequency of checking
         
     for name, active_processes in running_processes.items():
         for process in active_processes:

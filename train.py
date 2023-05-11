@@ -1,5 +1,5 @@
 from utils.setup import setup_experiment
-import argparse, torch, logging, time, multiprocessing, optuna
+import argparse, torch, logging, time, multiprocessing, optuna, copy
 from utils.utils import load_from_yaml, update_dict, optuna_traning_config, schedul_study
 from pathlib import Path
 from functools import partial
@@ -28,11 +28,13 @@ def train_opt(config, optimize_config, scheduler=None, updates=None):
     def objective(config, parameters, optimize_config, updates, trial):
         training_conf = optuna_traning_config(optimize_config, parameters, trial)
         if updates is None:
-            updates = []
-        updates.append(f"supervisor.args.version={trial.number}")
+            _updates = []
+        else:
+            _updates = copy.copy(updates)
+        _updates.append(f"supervisor.args.version={trial.number}")
         logging.info(f"Trial {trial.number}/{trials}")
         logging.debug(f"Trial config: {training_conf}")
-        return train_plan(config, training_conf, updates)
+        return train_plan(config, training_conf, _updates)
     Path(db).parent.mkdir(parents=True, exist_ok=True)
     storage_name = f"sqlite:///{db}"
     logging.info(f"Optuna storage: {storage_name}")
