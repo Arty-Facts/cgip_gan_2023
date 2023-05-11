@@ -1,5 +1,5 @@
 
-import subprocess, yaml, json, numpy, torch, random, os, logging
+import subprocess, yaml, json, numpy, torch, random, os, logging, re
 
 
 def run_cmd(cmd):
@@ -75,6 +75,27 @@ def update_dict_recursively(path, value, container):
         return update_dict_recursively(path[1:], value, container[path[0]])
     return update_dict_recursively(path[1:], value, container[path[0]])
 
+def get_opuna_value(name, opt_values, trial):
+    data_type,*values = opt_values
+    if data_type == "int":
+        min_value, max_value, step_scale = values
+        return trial.suggest_int(name, min_value, max_value, log=step_scale=="log")
+    elif data_type == "float":
+        min_value, max_value, step_scale = values
+        return trial.suggest_float(name, min_value, max_value, log=step_scale=="log")
+    elif data_type == "categorical":
+        return trial.suggest_categorical(name, values)
+    else:
+        raise ValueError(f"Unknown data type {data_type}")
 
 def optuna_traning_config(optimize_config, parameters, trial):
+    """Select parameters from optuna"""
+    conf_text = yaml.dump(optimize_config, default_flow_style=False, sort_keys=False)
+    for name, opt_values in parameters.items():
+        value = get_opuna_value(name, opt_values, trial)
+        conf_text = conf_text.replace(f"<{name}>", str(value))
+    if (missed := re.findall(r"<.*>", conf_text)):
+        raise ValueError(f"Missing values for {missed}")
+    return yaml.safe_load(conf_text)
+
     

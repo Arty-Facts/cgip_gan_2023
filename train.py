@@ -1,7 +1,9 @@
 from utils.setup import setup_experiment
 from multiprocessing import freeze_support
 import argparse, torch, logging
-from utils.utils import load_from_yaml, update_dict, optuna_traing_conf
+from utils.utils import load_from_yaml, update_dict, optuna_traning_config
+from pathlib import Path
+from functools import partial
 import optuna
 
 def train(config, updates=None):
@@ -23,12 +25,22 @@ def train_plan(config, training_config, updates=None):
 def train_opt(config, optimize_config, updates=None):
     parameters = optimize_config.pop("parameters")
     trials = int(optimize_config.pop("trials"))
+    study_name = optimize_config.pop("name")
     db = optimize_config.pop("db")
-    def objective(trial):
+    def objective(config, parameters, optimize_config, updates, trial):
         training_conf = optuna_traning_config(optimize_config, parameters, trial)
+        if updates is None:
+            updates = []
+        updates.append(f"supervisor.args.version={trial.number}")
+        logging.info(f"Trial {trial.number}/{trials}")
+        logging.debug(f"Trial config: {training_conf}")
         return train_plan(config, training_conf, updates)
-    study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=trials, storage=db)
+    Path(db).parent.mkdir(parents=True, exist_ok=True)
+    storage_name = f"sqlite:///{db}"
+    logging.info(f"Optuna storage: {storage_name}")
+    logging.info(f"Inspect using optuna-dashboard {storage_name}")
+    study = optuna.create_study(direction="minimize", study_name=study_name, storage=storage_name, load_if_exists=True)
+    study.optimize(partial(objective, config, parameters, optimize_config, updates), n_trials=trials)
     return study.best_value
 
 if __name__ == '__main__':
