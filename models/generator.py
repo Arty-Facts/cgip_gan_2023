@@ -6,10 +6,10 @@ from models.blocks import MappingNetwork, WSConv2d, StyleGanBlock, StyleGanInitB
 import logging
 
 class StyleGan_Generator(nn.Module):
-    def __init__(self, z_dim, w_dim, out_channels, latent_channels, leakyInReLU=0.2, start_size=(4, 4), scale_factor=2):
+    def __init__(self, z_dim, w_dim, out_channels, latent_channels, leakyInReLU=0.2, start_size=(4, 4), scale_factor=2, alpha=0.5):
         super().__init__()
-        self.z_dim, self.w_dim, self.out_channels, self.latent_channels, self.leakyInReLU, self.start_size, self.scale_factor = (
-             z_dim,      w_dim,      out_channels,      latent_channels,      leakyInReLU,      start_size,      scale_factor )
+        self.z_dim, self.w_dim, self.out_channels, self.latent_channels, self.leakyInReLU, self.start_size, self.scale_factor, self.alpha = (
+             z_dim,      w_dim,      out_channels,      latent_channels,      leakyInReLU,      start_size,      scale_factor,      alpha )
         assert len(latent_channels) >= 1, 'latent_channels must have at least 1 elements'
         
         self.map = ID_Layer(MappingNetwork(z_dim, w_dim))
@@ -30,12 +30,15 @@ class StyleGan_Generator(nn.Module):
     def forward(self, noise):
         w = self.map(noise)
         x = self.init_block(w)
+        y_hat = self.out_layers[0](x)
 
-        for feature_block in self.feature_blocks:
+        for feature_block, out_layer in zip(self.feature_blocks, self.out_layers[1:]):
             x = self.upsample(x)
             x = feature_block(x, w)
+            y_hat_up = self.upsample(y_hat)
+            y_hat = out_layer(x)
+            y_hat = self.alpha * y_hat + ( 1 - self.alpha ) * y_hat_up
 
-        y_hat = self.out_layers[-1](x)
         return y_hat
     
     def state_dict(self):

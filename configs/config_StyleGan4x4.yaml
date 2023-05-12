@@ -103,7 +103,6 @@ trainer:
     optimizer_discriminator: optD
     generator_loss: lossG
     discriminator_loss: lossD
-
 hooks:
   - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]

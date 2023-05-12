@@ -1,0 +1,28 @@
+stage16x16: 
+  supervisor:
+    args:
+      name: Optimize16x16
+      checkpoint: d:checkpoints
+  optimizers:
+    optG:
+      args:
+        lr: <LEARNING_RATE_G>
+        betas: [<BETA_1_G>, <BETA_2_G>]
+    optD:
+      args:
+        lr: <LEARNING_RATE_D>
+        betas: [<BETA_1_D>, <BETA_2_D>]
+  trainer:
+    args: 
+      epochs: 250
+parameters:
+  LEARNING_RATE_G: [float, 0.00001, 0.001, log]
+  LEARNING_RATE_D: [float, 0.00001, 0.001, log]
+  BETA_1_G: [float, 0.0, 1, uniform]
+  BETA_2_G: [float, 0.0, 1, uniform]
+  BETA_1_D: [float, 0.0, 1, uniform]
+  BETA_2_D: [float, 0.0, 1, uniform]
+trials: 100
+name: Optimize16x16
+db: d:checkpoints/Optimize16x16/optuna.db
+
