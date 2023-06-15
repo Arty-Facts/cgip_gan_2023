@@ -6,7 +6,7 @@ from models.blocks import MappingNetwork, WSConv2d, StyleGanBlock, StyleGanInitB
 import logging
 
 class StyleGan_Generator(nn.Module):
-    def __init__(self, z_dim, w_dim, out_channels, latent_channels, leakyInReLU=0.2, start_size=(4, 4), scale_factor=2, alpha=0.5):
+    def __init__(self, z_dim, w_dim, out_channels, latent_channels, leakyInReLU=0.2, start_size=(4, 4), scale_factor=2, alpha=0.9):
         super().__init__()
         self.z_dim, self.w_dim, self.out_channels, self.latent_channels, self.leakyInReLU, self.start_size, self.scale_factor, self.alpha = (
              z_dim,      w_dim,      out_channels,      latent_channels,      leakyInReLU,      start_size,      scale_factor,      alpha )
@@ -25,6 +25,7 @@ class StyleGan_Generator(nn.Module):
         for in_c, out_c in zip(latent_channels[:-1], latent_channels[1:]):
             self.feature_blocks.append(ID_Layer(StyleGanBlock(in_c, out_c, w_dim)))
             self.out_layers.append(ID_Layer(WSConv2d(out_c, out_channels, kernel_size = 1, stride=1, padding=0)))
+        # self.combine = ID_Layer(nn.Conv2d(2*out_channels, out_channels, kernel_size=1))
         self.layers = [self.map, self.init_block, *self.feature_blocks, *self.out_layers]
         
     def forward(self, noise):
@@ -37,6 +38,7 @@ class StyleGan_Generator(nn.Module):
             x = feature_block(x, w)
             y_hat_up = self.upsample(y_hat)
             y_hat = out_layer(x)
+            # y_hat = self.combine(torch.concat([y_hat_up, y_hat], dim=1))
             y_hat = self.alpha * y_hat + ( 1 - self.alpha ) * y_hat_up
 
         return y_hat

@@ -106,7 +106,7 @@ def frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     assert sigma1.shape == sigma2.shape, \
         'Training and test covariances have different dimensions'
 
-    diff = mu1 - mu2
+    mu_diff = mu1 - mu2
 
     # Product might be almost singular
     covmean = scipy.linalg.sqrtm(sigma1.dot(sigma2), disp=False)[0]
@@ -123,7 +123,7 @@ def frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
     tr_covmean = np.trace(covmean)
 
-    return (diff.dot(diff) + np.trace(sigma1)
+    return (mu_diff.dot(mu_diff) + np.trace(sigma1)
             + np.trace(sigma2) - 2 * tr_covmean)
 
 def inception_activation_statistics(images, model, device='cpu'):
@@ -200,8 +200,8 @@ def torch_compute_mean_and_variance(images):
     # Concatenate the images into a single NumPy array
     image_array = torch.stack(images, dim=0)
     # Compute the mean and variance along the appropriate axes
-    mean = torch.mean(image_array, dim=(0))
-    variance = torch.var(image_array, dim=(0))
+    mean = torch.mean(image_array, dim=0)
+    variance = torch.var(image_array, dim=0)
 
     return mean, variance
 

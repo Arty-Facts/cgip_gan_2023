@@ -105,17 +105,17 @@ trainer:
     discriminator_loss: lossD
 
 hooks:
-  - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
+  # - [hooks.load, Resume, {targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.save, SaveToDir, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}, dir: latest}]
   - [hooks.save, SaveAll, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
   - [hooks.gan_hooks, TensorboardGenerateImageSample, {every: 10, target_model: netG, samples: 64}]
   - [hooks.gan_hooks, TensorboardScalarData, {every: 10, targets: [loss_disc,  loss_gen]}]
-  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 1000, name: FID-train}]
-  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: val, samples: 1000, name: FID-val}]
-  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 1000}]
-  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 1000}]
+  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: train, samples: 10, name: FID-train}]
+  - [hooks.gan_hooks, TensorboardFID, {every: 10, generator: netG, data: val, samples: 10, name: FID-val}]
+  - [hooks.gan_hooks, TensorboardLFDS, {every: 10, encoder: netD, generator: netG, data: train, samples: 10}]
+  - [hooks.gan_hooks, TensorboardImageStatsCosineSimilarity, {every: 10, generator: netG, data: train, samples: 10}]
   - [hooks.save, SaveBest, {every: 10, targets: {netG: generator.pkl, netD: discriminator.pkl, optG: optimizer_generator.pkl, optD: optimizer_discriminator.pkl, meta: meta.json}}]
-  # - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
+  - [hooks.gan_hooks, ConsoleStats, {every: 1, targets: [loss_disc,  loss_gen]}]
 
 
 

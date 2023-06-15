@@ -12,3 +12,5 @@ torch-summary
 numba
 optuna
 optuna-dashboard
+bootstrapped
+tikzplotlib
