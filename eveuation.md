@@ -63,6 +63,7 @@
   - **Lack of interpretability:** The FID score is not easy to interpret on its own. It does not have a clear range of values, and lower scores are better, but beyond that, there's no clear meaning attached to specific values. A lower FID indicates better image quality and diversity, but it's hard to say how much "better" an FID of, say, 10 is compared to an FID of 20.
   - **Not sensitive to small localized differences:** FID may not be sensitive to small localized differences or distortions in images, as it operates on summary statistics of the feature distributions. Thus, it may miss subtle but important differences between generated and real images.
   - **Samples size efects the result:** The size of the samples used to compute FID has an impact on the resulting value. Smaller sample sizes may lead to a larger FID and thus less accurate estimates of the feature distributions. It is generally recommended to use a sufficiently large number of samples to obtain reliable and representative feature distributions for accurate FID computation.
+  - **image size:** The size of the images used to compute FID has an impact on the resulting value. Smaller images may lead to a larger FID and thus less accurate estimates of the feature distributions. It is generally recommended to use images of size 299x299 obtain reliable and representative feature distributions for accurate FID computation. Larger images may be used, but some fine details may be lost due to the resizing operation to 299x299.
 
 **Related Links**: 
 * [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)
@@ -160,7 +161,7 @@
 
 - **Advantages:** KID provides a more reliable measure for evaluating GANs as it does not make any assumptions about the distribution of the samples. It is also relatively straightforward to compute and does not involve complex statistical computations.
 
-- **Limitations:** KID relies on the Inception model, which was trained on the ImageNet dataset. This means it might not be suitable for datasets that are significantly different from ImageNet. It also does not provide a human-interpretable score, which makes it challenging to understand how good a model is by looking at the KID value alone.
+- **Limitations:** Due to the stocastic nature of sampling features the KID score is not deterministic. This means that the score can vary between runs. To get a more stable score, it is recommended to run the evaluation multiple times and average the results.
 
 
 **Related Links**: 
