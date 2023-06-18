@@ -1,7 +1,3 @@
-can you give me an extensive summery of Modified Inception Score (m-IS). In the summary you should state the year a metric was introduced, the basic idea, where it can be used, the formula for the caculation, why its good, and what is the limitation of the metric and add some history of the metric. Can you provide the arxiv.org links in the text if you find any? 
-
-can you present this in  a script window so that i can copy it . use markdown format and use latex for math
-
 # Adversarial Accuracy and Adversarial Divergence
 
 - **Adversarial Accuracy** is a metric for evaluating the robustness of a machine learning model to adversarial attacks. The exact year of introduction is challenging to pinpoint as it has naturally evolved with the emergence of adversarial attacks and the corresponding need for evaluating model robustness.
@@ -180,15 +176,6 @@ can you present this in  a script window so that i can copy it . use markdown fo
 
   The fundamental idea of MMD is to provide a measure of similarity between two data sets. If the data sets are drawn from the same distribution, the MMD between them should be small. Conversely, if they're drawn from different distributions, the MMD should be large. Hence, MMD is a valuable tool for tasks such as two-sample testing and training generative models.
 
-- **Formula for Calculation:**
-  Empirical estimation of MMD
-  In real-life settings, we don't have access to the underlying distribution of our data. Hence, it's possible to use an estimate for MMD as:
-
-
-  $$MMD^2(P, Q) = \frac{1}{m(m-1)} \sum_{i \neq j}^m k(x_i, x_j) - \frac{2}{mn} \sum_{i,j}^m k(x_i, y_j) + \frac{1}{n(n-1)} \sum_{i \neq j}^n k(y_i, y_j)$$
-
-
-
 - **Advantages:** MMD is a flexible and powerful method for comparing distributions, usable with any data type as long as a suitable kernel is available. It has strong theoretical properties: with a properly chosen kernel, MMD can match up to infinite moments of data distributions.
 
 - **Limitations:** However, it requires a suitable choice of kernel and the computation of mean embeddings of the distributions, which can be computationally expensive for large datasets.
@@ -197,15 +184,41 @@ can you present this in  a script window so that i can copy it . use markdown fo
 - [Minimax Estimation of Maximum Mean Discrepancy with Radial Kernels](https://proceedings.neurips.cc/paper_files/paper/2016/file/5055cbf43fac3f7e2336b27310f0b9ef-Paper.pdf)
 - [Maximum Mean Discrepancy (MMD) in Machine Learning](https://www.onurtunali.com/ml/2019/03/08/maximum-mean-discrepancy-in-machine-learning.html)
 
-# Modified Inception Score (m-IS)
-# Multi-Scale Structural Similarity Index Measure (MS-SSIM)
-# Normalized Relative Discriminative Score (NRDS)
 # Peak Signal-to-Noise Ratio (PSNR)
-Precision, Recall, and F1 Score​
-# Reconstruction Error
-# Relative Average Spectral Error (RASE)
-# Root Mean Squared Error Using Sliding Window
-# Structural Similarity Index Measure (SSIM) and Multi-Scale SSIM (MS-SSIM)
-# The Wasserstein Critic
-# Total Variation (TV)
-# Universal Image Quality Index
+
+- **Basic Idea:**
+  The Peak Signal-to-Noise Ratio (PSNR) is a widely used metric in the field of image processing and computer vision, especially for assessing the quality of reconstructed or compressed images. It is based on the mathematical concept of the signal-to-noise ratio (SNR), which is a measure used in science and engineering to quantify how much a signal has been corrupted by noise.
+
+  PSNR is calculated by comparing the maximum possible power of a signal (in the case of an image, the maximum possible pixel value) with the power of corrupting noise (the mean squared error between the original and the reconstructed or compressed image). The formula for PSNR is as follows:
+  $$PSNR = 10 * log10(\frac {R^2}{MSE})$$
+
+  where $R$ is the maximum fluctuation in the input image data type. For example, if the input image has a double-precision floating-point data type, then $R$ is 1. If it has an 8-bit unsigned integer data type, $R$ is 255, etc., and $MSE$ is the Mean Squared Error between the original and the reconstructed or compressed image.
+
+- **Usage:** 
+  The PSNR metric has been used for many years in image and video quality assessment, but I was unable to find the exact year it was introduced. It is highly possible that the concept originated from the field of signal processing and was later adapted for image and video quality assessment.
+
+- **Advantages:** 
+  The strengths of PSNR include its simplicity and ease of calculation. It gives a quick and straightforward indication of the overall difference between two images. 
+
+- **Limitations:** 
+  However, its limitations lie in its inability to perfectly correlate with human perceived image quality. PSNR assumes that the noise is signal-dependent which might not be the case always. Also, it can't capture the perceptual changes that might be more significant than pixel-level changes.
+
+**Related Links**: 
+
+# Structural Similarity Index Measure (SSIM)
+
+- **Basic Idea:**
+  The basic idea behind SSIM is to consider changes in structural information, luminance, and contrast that are important for human visual perception. This contrasts with traditional methods, such as mean squared error (MSE) or peak signal-to-noise ratio (PSNR), which focus primarily on the pixel-wise differences between the two images.
+
+- **Usage:** 
+  SSIM is used in a variety of contexts, particularly in fields related to image and video processing, such as compression, transmission, storage, restoration, and reproduction. It's often employed as a performance measure for assessing the quality of these types of systems or algorithms.
+
+
+- **Advantages:** 
+  The major benefit of SSIM is that it is designed to model human visual perception, which is highly adapted for extracting structural information from a scene. Therefore, SSIM is thought to be more consistent with human visual system behavior than other image comparison methods.
+
+- **Limitations:** 
+  However, SSIM does have some limitations. It assumes that the human visual system is highly adapted for extracting structural information from the scene, but this assumption may not always hold. Furthermore, its performance can depend on the choice of window size. Smaller window sizes may not capture enough structural information, while larger window sizes may miss important local details.
+
+**Related Links**: 
+- [Image quality assessment: from error visibility to structural similarity](https://ieeexplore.ieee.org/document/1284395)
